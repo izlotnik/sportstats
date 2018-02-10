@@ -1,0 +1,9 @@
+## Python
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# PyCharm IDE
+.idea/
