@@ -37,10 +37,11 @@ PATH_TO_CHROME_DRIVER = 'chromedriver.exe'
 if __name__ == "__main__":
     # Set the URL to start
     start_url = "https://www.sportstats.ca/display-results.xhtml?raceid=44616"
-    first_page = 39
+    first_page = 50
+    restart_page = 5
 
     # Set maximum sleeping time
-    sleep_time_sec = 3
+    sleep_time_sec = 5
 
     # Define main table xpath queries
     main_table_xpath = "//table[@class='results overview-result']"
@@ -56,16 +57,22 @@ if __name__ == "__main__":
         wr_expanded = csv.writer(expanded_file, delimiter=';', quoting=csv.QUOTE_ALL)
         wr_athlete = csv.writer(athlete_file, delimiter=';', quoting=csv.QUOTE_ALL)
 
-        # Define Chrome web driver
-        browser = webdriver.Chrome(PATH_TO_CHROME_DRIVER)
-        browser.maximize_window()
-        # browser.implicitly_wait(sleep_time_sec)
-        count = 0
         try:
-            browser.get(start_url)
-            get_next_page(browser, first_page, sleep_time_sec)
-
+            row_id, count = 1, 0
             while True:
+                if count == 0 or count % ((row_id-1) * restart_page) == 0:
+                    if count > 0:
+                        print("Close the browser")
+                        browser.quit()
+
+                    # Define Chrome web driver
+                    browser = webdriver.Chrome(PATH_TO_CHROME_DRIVER)
+                    browser.maximize_window()
+                    # browser.implicitly_wait(sleep_time_sec)
+                    browser.get(start_url)
+                    get_next_page(browser, first_page, sleep_time_sec)
+
+                #
                 main_table = browser.find_element_by_xpath(main_table_xpath)
 
                 # Get the header of the main table and save it
@@ -76,7 +83,7 @@ if __name__ == "__main__":
                     wr_main.writerow(main_header)
 
                 # Iterate through each row of the main table
-                for row_id, row in enumerate(main_table.find_elements_by_xpath("//tbody/tr")):
+                for row_id, row in enumerate(main_table.find_elements_by_xpath("//tbody/tr"), 1):
                     # Get unique id for each row of the table
                     uid = uuid.uuid4().hex
 
@@ -141,7 +148,7 @@ if __name__ == "__main__":
                     count += 1
 
                     # Print the result
-                    print(row_id+1, count, main_info, athlete_info, sep='\n')
+                    print(row_id, count, main_info, athlete_info, sep='\n')
 
                 # Load next page
                 first_page += 1
