@@ -8,22 +8,44 @@ import time
 import uuid
 
 
+def get_next_page(driver, next_page_num, freezing_time):
+    nav_pages = driver.find_elements_by_xpath("//div[@id='mainForm:pageNav']/div/ul/li")
+
+    # Get first, active and last page numbers
+    first_page_num = int(nav_pages[2].find_element_by_tag_name("a").text)
+    active_page_num = int(driver.find_element_by_xpath(
+        "//div[@id='mainForm:pageNav']/div/ul/li[@class='active']").find_element_by_tag_name("a").text)
+    last_page_num = int(nav_pages[-3].find_element_by_tag_name("a").text)
+
+    if next_page_num <= active_page_num:
+        return
+
+    if next_page_num <= last_page_num:
+        nav_pages[next_page_num - first_page_num + 2].find_element_by_tag_name("a").click()
+        time.sleep(freezing_time)
+
+        return
+    else:
+        nav_pages[-3].find_element_by_tag_name("a").click()
+        time.sleep(freezing_time)
+
+        get_next_page(driver, next_page_num, freezing_time)
+
+
 PATH_TO_CHROME_DRIVER = 'chromedriver.exe'
 
 if __name__ == "__main__":
     # Set the URL to start
     start_url = "https://www.sportstats.ca/display-results.xhtml?raceid=44616"
+    first_page = 39
 
     # Set maximum sleeping time
-    sleep_time_sec = 5
+    sleep_time_sec = 3
 
     # Define main table xpath queries
     main_table_xpath = "//table[@class='results overview-result']"
     expanded_table_xpath = "//tr[@class='ui-expanded-row-content ui-widget-content view-details']"
     athlete_table_xpath = "//div[@id='athlete-popup']"
-
-    # Define next page navigator xpath queries
-    page_xpath = "//div[@id='mainForm:pageNav']/div/ul/li"
 
     # with open('results.csv', 'w', newline='') as csv_file:
     with open('results_main.csv', 'w', newline='', encoding="utf-8") as main_file, \
@@ -41,9 +63,7 @@ if __name__ == "__main__":
         count = 0
         try:
             browser.get(start_url)
-            # active_page = browser.find_element_by_xpath("//div[@id='mainForm:pageNav']/div/ul/li[@class='active']")
-            # active_page = active_page.find_element_by_tag_name("a")
-            # print(active_page.text, active_page.is_displayed())
+            get_next_page(browser, first_page, sleep_time_sec)
 
             while True:
                 main_table = browser.find_element_by_xpath(main_table_xpath)
@@ -59,7 +79,7 @@ if __name__ == "__main__":
                 for row_id, row in enumerate(main_table.find_elements_by_xpath("//tbody/tr")):
                     # Get unique id for each row of the table
                     uid = uuid.uuid4().hex
-                    
+
                     # Parse the main table rows and save them
                     try:
                         table_td = row.find_elements_by_tag_name("td")
@@ -121,18 +141,11 @@ if __name__ == "__main__":
                     count += 1
 
                     # Print the result
-                    print(row_id+1, count, main_info, split_info, athlete_info, sep='\n')
-                    
-                # Load next page
-                next_page = browser.find_elements_by_xpath(page_xpath)
-                next_page = next_page[-2]
-                next_page = next_page.find_element_by_tag_name("a")
-                # next_page = WebDriverWait(browser, sleep_time_sec).until(
-                #     EC.element_to_be_clickable((By.TAG_NAME, "a")))
-                # print(next_page, next_page.text, sep='\n')
-                next_page.click()
+                    print(row_id+1, count, main_info, athlete_info, sep='\n')
 
-                time.sleep(sleep_time_sec)
+                # Load next page
+                first_page += 1
+                get_next_page(browser, first_page, sleep_time_sec)
 
         except Exception as e:
             print(e)
