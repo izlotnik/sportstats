@@ -26,9 +26,9 @@ if __name__ == "__main__":
     page_xpath = "//div[@id='mainForm:pageNav']/div/ul/li"
 
     # with open('results.csv', 'w', newline='') as csv_file:
-    with open('results_main.csv', 'w', newline='') as main_file, \
-            open('results_expanded.csv', 'w', newline='') as expanded_file, \
-            open('results_athlete.csv', 'w', newline='') as athlete_file:
+    with open('results_main.csv', 'w', newline='', encoding="utf-8") as main_file, \
+            open('results_expanded.csv', 'w', newline='', encoding="utf-8") as expanded_file, \
+            open('results_athlete.csv', 'w', newline='', encoding="utf-8") as athlete_file:
         # Set writers
         wr_main = csv.writer(main_file, delimiter=';', quoting=csv.QUOTE_ALL)
         wr_expanded = csv.writer(expanded_file, delimiter=';', quoting=csv.QUOTE_ALL)
@@ -126,10 +126,10 @@ if __name__ == "__main__":
                 # Load next page
                 next_page = browser.find_elements_by_xpath(page_xpath)
                 next_page = next_page[-2]
-                next_page = WebDriverWait(browser, sleep_time_sec).until(
-                    EC.element_to_be_clickable((By.TAG_NAME, "a")))
-                # next_page = next_page.find_element_by_tag_name("a")
-                print(next_page, next_page.text, sep='\n')
+                next_page = next_page.find_element_by_tag_name("a")
+                # next_page = WebDriverWait(browser, sleep_time_sec).until(
+                #     EC.element_to_be_clickable((By.TAG_NAME, "a")))
+                # print(next_page, next_page.text, sep='\n')
                 next_page.click()
 
                 time.sleep(sleep_time_sec)
