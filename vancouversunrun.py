@@ -14,7 +14,7 @@ def get_next_page(driver, next_page_num, freezing_time):
     # Get first, active and last page numbers
     first_page_num = int(nav_pages[2].find_element_by_tag_name("a").text)
     active_page_num = int(driver.find_element_by_xpath(
-        "//div[@id='mainForm:pageNav']/div/ul/li[@class='active']").find_element_by_tag_name("a").text)
+        "//div[@id='mainForm:pageNav']/div/ul/li[@class='active']/a").text)
     last_page_num = int(nav_pages[-3].find_element_by_tag_name("a").text)
 
     if next_page_num <= active_page_num:
