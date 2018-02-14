@@ -148,7 +148,7 @@ if __name__ == "__main__":
                     count += 1
 
                     # Print the result
-                    print(row_id, count, main_info, athlete_info, sep='\n')
+                    print(row_id, count, sep='\n')  # , main_info, athlete_info
 
                 # Load next page
                 first_page += 1
