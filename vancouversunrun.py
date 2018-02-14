@@ -9,7 +9,9 @@ import uuid
 
 
 def get_next_page(driver, next_page_num, freezing_time):
-    nav_pages = driver.find_elements_by_xpath("//div[@id='mainForm:pageNav']/div/ul/li")
+    # nav_pages = driver.find_elements_by_xpath("//div[@id='mainForm:pageNav']/div/ul/li")
+    nav_pages = WebDriverWait(driver, freezing_time).until(
+        EC.presence_of_all_elements_located((By.XPATH, "//div[@id='mainForm:pageNav']/div/ul/li")))
 
     # Get first, active and last page numbers
     first_page_num = int(nav_pages[2].find_element_by_tag_name("a").text)
