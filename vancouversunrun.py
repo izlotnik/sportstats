@@ -99,7 +99,6 @@ if __name__ == "__main__":
 
                     # Click on the second element in the table ("VIEW") to expand the table and wait for 5 sec
                     table_td[1].find_element_by_tag_name("div").click()
-                    # time.sleep(sleep_time_sec)
 
                     # Locate the expanded table
                     # expanded_table = browser.find_element_by_xpath(expanded_table_xpath)
@@ -140,7 +139,6 @@ if __name__ == "__main__":
 
                     # Click again on the view to fold it and wait until closed
                     table_td[1].find_element_by_tag_name("div").click()
-                    # time.sleep(sleep_time_sec)
                     _ = WebDriverWait(browser, sleep_time_sec).until_not(
                         EC.visibility_of_element_located((By.XPATH, athlete_table_xpath)))
 
