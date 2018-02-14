@@ -39,7 +39,7 @@ PATH_TO_CHROME_DRIVER = 'chromedriver.exe'
 if __name__ == "__main__":
     # Set the URL to start
     start_url = "https://www.sportstats.ca/display-results.xhtml?raceid=44616"
-    first_page = 50
+    first_page = 13
     restart_page = 5
 
     # Set maximum sleeping time
@@ -148,7 +148,8 @@ if __name__ == "__main__":
                     count += 1
 
                     # Print the result
-                    print(row_id, count, sep='\n')  # , main_info, athlete_info
+                    print("Downloaded row {} from page {}. Overall downloaded rows: {}".format(
+                        row_id, first_page, count))
 
                 # Load next page
                 first_page += 1
