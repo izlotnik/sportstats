@@ -1,6 +1,6 @@
 import csv
 from selenium import webdriver
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,13 +8,17 @@ import time
 import uuid
 
 
-def get_next_page(driver, next_page_num, max_wait_time, freezing_time=1):
+def wait_while_page_is_updated(driver, max_wait_time):
     # If AJAX is still running then
     #   <div id="ajaxStatusPanel_start" style="display: block;">
     # Otherwise
     #   <div id="ajaxStatusPanel_start" style="display: none;">
     _ = WebDriverWait(driver, max_wait_time).until_not(
         EC.visibility_of_element_located((By.XPATH, "//div[@id='ajaxStatusPanel_start']")))
+
+
+def get_next_page(driver, next_page_num, max_wait_time, freezing_time=3):
+    wait_while_page_is_updated(driver, max_wait_time)
 
     # nav_pages = driver.find_elements_by_xpath("//div[@id='mainForm:pageNav']/div/ul/li")
     nav_pages = WebDriverWait(driver, max_wait_time).until(
@@ -30,50 +34,31 @@ def get_next_page(driver, next_page_num, max_wait_time, freezing_time=1):
         return
 
     if next_page_num <= last_page_num:
-        ajax_start = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_start']")
-        ajax_complete = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_complete']")
-        print('Before click',
-              ajax_start.get_attribute('style'), ajax_start.is_displayed(), ' | ',
-              ajax_complete.get_attribute('style'), ajax_complete.is_displayed())
+        nav_pages = WebDriverWait(driver, max_wait_time).until(
+            EC.presence_of_all_elements_located((By.XPATH, "//div[@id='mainForm:pageNav']/div/ul/li")))
         elem = nav_pages[next_page_num - first_page_num + 2].find_element_by_tag_name("a")
         elem.location_once_scrolled_into_view
-        elem.click()
-        ajax_start = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_start']")
-        ajax_complete = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_complete']")
-        print('After click',
-              ajax_start.get_attribute('style'), ajax_start.is_displayed(), ' | ',
-              ajax_complete.get_attribute('style'), ajax_complete.is_displayed())
+        try:
+            elem.click()
+        except WebDriverException as e:
+            print(e)
+            time.sleep(freezing_time)
+            get_next_page(driver, next_page_num, max_wait_time)
         time.sleep(freezing_time)
-        ajax_start = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_start']")
-        ajax_complete = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_complete']")
-        print('After sleep',
-              ajax_start.get_attribute('style'), ajax_start.is_displayed(), ' | ',
-              ajax_complete.get_attribute('style'), ajax_complete.is_displayed())
-        print()
         return
     else:
         # nav_pages[-3].find_element_by_tag_name("a").click()
-        # time.sleep(max_wait_time)
-        ajax_start = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_start']")
-        ajax_complete = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_complete']")
-        print('Before click',
-              ajax_start.get_attribute('style'), ajax_start.is_displayed(), ' | ',
-              ajax_complete.get_attribute('style'), ajax_complete.is_displayed())
+        nav_pages = WebDriverWait(driver, max_wait_time).until(
+            EC.presence_of_all_elements_located((By.XPATH, "//div[@id='mainForm:pageNav']/div/ul/li")))
         elem = nav_pages[-3].find_element_by_tag_name("a")
         elem.location_once_scrolled_into_view
-        elem.click()
-        ajax_start = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_start']")
-        ajax_complete = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_complete']")
-        print('After click',
-              ajax_start.get_attribute('style'), ajax_start.is_displayed(), ' | ',
-              ajax_complete.get_attribute('style'), ajax_complete.is_displayed())
+        try:
+            elem.click()
+        except WebDriverException as e:
+            print(e)
+            time.sleep(freezing_time)
+            get_next_page(driver, next_page_num, max_wait_time)
         time.sleep(freezing_time)
-        ajax_start = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_start']")
-        ajax_complete = driver.find_element_by_xpath("//div[@id='ajaxStatusPanel_complete']")
-        print('After sleep',
-              ajax_start.get_attribute('style'), ajax_start.is_displayed(), ' | ',
-              ajax_complete.get_attribute('style'), ajax_complete.is_displayed())
-        print()
         get_next_page(driver, next_page_num, max_wait_time)
 
 
@@ -82,11 +67,11 @@ PATH_TO_CHROME_DRIVER = 'chromedriver.exe'
 if __name__ == "__main__":
     # Set the URL to start
     start_url = "https://www.sportstats.ca/display-results.xhtml?raceid=44616"
-    first_page = 800
+    first_page = 1
     restart_page = 5
 
-    # Set maximum sleeping time
-    max_wait_time_sec = 5
+    # Set the maximum waiting time
+    max_wait_time_sec = 15
 
     # Define main table xpath queries
     main_table_xpath = "//table[@class='results overview-result']"
@@ -117,7 +102,7 @@ if __name__ == "__main__":
                     browser.get(start_url)
                     get_next_page(browser, first_page, max_wait_time_sec)
 
-                #
+                wait_while_page_is_updated(browser, max_wait_time_sec)
                 main_table = browser.find_element_by_xpath(main_table_xpath)
 
                 # Get the header of the main table and save it
@@ -144,6 +129,7 @@ if __name__ == "__main__":
 
                     # Click on the second element in the table ("VIEW") to expand the table and wait for 5 sec
                     table_td[1].find_element_by_tag_name("div").click()
+                    wait_while_page_is_updated(browser, max_wait_time_sec)
 
                     # Locate the expanded table
                     # expanded_table = browser.find_element_by_xpath(expanded_table_xpath)
@@ -184,6 +170,7 @@ if __name__ == "__main__":
 
                     # Click again on the view to fold it and wait until closed
                     table_td[1].find_element_by_tag_name("div").click()
+                    wait_while_page_is_updated(browser, max_wait_time_sec)
                     _ = WebDriverWait(browser, max_wait_time_sec).until_not(
                         EC.visibility_of_element_located((By.XPATH, athlete_table_xpath)))
 
